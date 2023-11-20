@@ -18,6 +18,7 @@ public class TeleOp2023 extends LinearOpMode {
         DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
         DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
         DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
+        DcMotor robinson = hardwareMap.dcMotor.get("backLeftMotor");
 
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
@@ -31,13 +32,13 @@ public class TeleOp2023 extends LinearOpMode {
         // Adjust the orientation parameters to match your robot
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
         waitForStart();
 
-        double speed = .5;
+        double speed = 1;
 
         if (isStopRequested()) return;
 
@@ -53,6 +54,13 @@ public class TeleOp2023 extends LinearOpMode {
                 imu.resetYaw();
             }
 
+            if (gamepad1.a) {
+                robinson.setPower(.5);
+            } else if (gamepad1.b) {
+                robinson.setPower(-.5);
+            } else {
+                robinson.setPower(0);
+            }
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
             // Rotate the movement direction counter to the bot's rotation
