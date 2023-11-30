@@ -16,19 +16,17 @@ public class TeleOp2023 extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         // Declare our motors--
         // Make sure your ID's match your configuration
-        DcMotor lary = hardwareMap.dcMotor.get("lary");
+        DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
         DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
         DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
         DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
         DcMotor rightSlideMotor = hardwareMap.dcMotor.get("rightSlideMotor");
         DcMotor leftSlideMotor = hardwareMap.dcMotor.get("leftSlideMotor");
-        Servo stephanie = hardwareMap.servo.get("stephanie");
-        Servo goodServo = hardwareMap.servo.get("goodServo");
+        Servo intake = hardwareMap.servo.get("intake"); //intake
+        Servo claw = hardwareMap.servo.get("claw"); //claw
+        Servo wrist = hardwareMap.servo.get("wrist");
 
-        //DcMotor leftSlideMotor = hardwareMap.dcMotor.get("leftSlideMotor");
-        //DcMotor rightSlideMotor = hardwareMap.dcMotor.get("rightSlideMotor");
-
-        lary.getCurrentPosition();
+        frontLeftMotor.getCurrentPosition();
 
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
@@ -57,50 +55,18 @@ public class TeleOp2023 extends LinearOpMode {
         double clawOpen = .3;
         double clawClose = .7;
 
+        // Limits
+        double topLimit = 0;
+        double bottomLimit = 1000;
+
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
+
+
             double y = -gamepad1.left_stick_y * driveSpeed; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x * driveSpeed;
             double rx = gamepad1.right_stick_x * driveSpeed;
-
-            // This button choice was made so that it is hard to hit on accident,
-            // it can be freely changed based on preference.
-            // The equivalent button is start on Xbox-style controllers.
-            if (gamepad1.options) {
-                imu.resetYaw();
-            }
-
-            // Moves the arm up and down
-            if (gamepad1.left_trigger > armSpeed)  {
-                leftSlideMotor.setPower(armSpeed);
-                rightSlideMotor.setPower(armSpeed);
-            }  else if (gamepad1.right_trigger > armSpeed) {
-                leftSlideMotor.setPower(-armSpeed);
-                rightSlideMotor.setPower(-armSpeed);
-            } else {
-                leftSlideMotor.setPower(0);
-                rightSlideMotor.setPower(0);
-            }
-
-            // Intake speed
-            if (gamepad1.a) {
-                stephanie.setPosition(intakeSpeed);
-            } else {
-                stephanie.setPosition(0);
-                //Continuous Servo speed
-            }
-
-            // Claw position
-            if (gamepad1.y) {
-                goodServo.setPosition(clawOpen);
-            } else if (gamepad1.x) {
-                goodServo.setPosition(clawClose);
-            } else {
-                goodServo.setPosition(0);
-            }
-
-
 
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
@@ -119,12 +85,49 @@ public class TeleOp2023 extends LinearOpMode {
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
 
-            lary.setPower(frontLeftPower);
+            frontLeftMotor.setPower(frontLeftPower);
             backLeftMotor.setPower(backLeftPower);
             frontRightMotor.setPower(frontRightPower);
-            backRightMotor.setPower(backRightPower);
+            backRightMotor.setPower(backRightPower); // Drive
 
-            telemetry.addData("Left Bore Reading", lary.getCurrentPosition());
+            // Other functions
+
+            // Reset Odometry
+            if (gamepad1.options) {
+                imu.resetYaw();
+            }
+
+            // Moves the arm up and down
+            if (gamepad1.left_trigger > armSpeed)  {
+                leftSlideMotor.setPower(armSpeed);
+                rightSlideMotor.setPower(armSpeed);
+            }  else if (gamepad1.right_trigger > armSpeed) {
+                leftSlideMotor.setPower(-armSpeed);
+                rightSlideMotor.setPower(-armSpeed);
+            } else {
+                leftSlideMotor.setPower(0);
+                rightSlideMotor.setPower(0);
+            }
+
+            // Intake speed
+            if (gamepad1.a) {
+                intake.setPosition(intakeSpeed);
+            } else {
+                intake.setPosition(0);
+                //Continuous Servo speed
+            }
+
+            // Claw position
+            if (gamepad1.y) {
+                claw.setPosition(clawOpen);
+            } else if (gamepad1.x) {
+                claw.setPosition(clawClose);
+            } else {
+                claw.setPosition(0);
+            }
+
+            telemetry.addData("Left Bore Reading", frontLeftMotor.getCurrentPosition());
+            telemetry.addData("Slide Reading", leftSlideMotor.getCurrentPosition());
             telemetry.update();
 
         }
