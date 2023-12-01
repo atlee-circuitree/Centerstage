@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -22,7 +23,8 @@ public class TeleOp2023 extends LinearOpMode {
         DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
         DcMotor rightSlideMotor = hardwareMap.dcMotor.get("rightSlideMotor");
         DcMotor leftSlideMotor = hardwareMap.dcMotor.get("leftSlideMotor");
-        Servo intake = hardwareMap.servo.get("intake"); //intake
+        CRServo intake = hardwareMap.crservo.get("intake");
+        //Servo intake = hardwareMap.servo.get("intake");
         Servo claw = hardwareMap.servo.get("claw"); //claw
         Servo wrist = hardwareMap.servo.get("wrist");
 
@@ -34,6 +36,8 @@ public class TeleOp2023 extends LinearOpMode {
         // See the note about this earlier on this page.
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        rightSlideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
@@ -48,16 +52,16 @@ public class TeleOp2023 extends LinearOpMode {
 
         // Function Speeds
         double driveSpeed = .5;
-        double armSpeed = .5;
-        double intakeSpeed = .3;
+        double armSpeed = .25;
+        double intakeSpeed = .8;
 
         // Function Positions
-        double clawOpen = .3;
-        double clawClose = .7;
+        double clawOpen = .5;
+        double clawClose = .3;
 
         // Limits
-        double topLimit = 0;
-        double bottomLimit = 1000;
+        double topLimit = 1500;
+        double bottomLimit = 200;
 
         if (isStopRequested()) return;
 
@@ -85,10 +89,10 @@ public class TeleOp2023 extends LinearOpMode {
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
 
-            frontLeftMotor.setPower(frontLeftPower);
-            backLeftMotor.setPower(backLeftPower);
-            frontRightMotor.setPower(frontRightPower);
-            backRightMotor.setPower(backRightPower); // Drive
+            //frontLeftMotor.setPower(frontLeftPower);
+            //backLeftMotor.setPower(backLeftPower);
+            //frontRightMotor.setPower(frontRightPower);
+            //rcbackRightMotor.setPower(backRightPower); // Drive
 
             // Other functions
 
@@ -98,10 +102,10 @@ public class TeleOp2023 extends LinearOpMode {
             }
 
             // Moves the arm up and down
-            if (gamepad1.left_trigger > armSpeed)  {
+            if (gamepad1.left_bumper && leftSlideMotor.getCurrentPosition() < topLimit)  {
                 leftSlideMotor.setPower(armSpeed);
                 rightSlideMotor.setPower(armSpeed);
-            }  else if (gamepad1.right_trigger > armSpeed) {
+            }  else if (gamepad1.right_bumper && leftSlideMotor.getCurrentPosition() > bottomLimit) {
                 leftSlideMotor.setPower(-armSpeed);
                 rightSlideMotor.setPower(-armSpeed);
             } else {
@@ -111,9 +115,9 @@ public class TeleOp2023 extends LinearOpMode {
 
             // Intake speed
             if (gamepad1.a) {
-                intake.setPosition(intakeSpeed);
+                intake.setPower(intakeSpeed);
             } else {
-                intake.setPosition(0);
+                intake.setPower(0);
                 //Continuous Servo speed
             }
 
@@ -122,12 +126,11 @@ public class TeleOp2023 extends LinearOpMode {
                 claw.setPosition(clawOpen);
             } else if (gamepad1.x) {
                 claw.setPosition(clawClose);
-            } else {
-                claw.setPosition(0);
             }
 
             telemetry.addData("Left Bore Reading", frontLeftMotor.getCurrentPosition());
             telemetry.addData("Slide Reading", leftSlideMotor.getCurrentPosition());
+            telemetry.addData("Claw Reading", claw.getPosition());
             telemetry.update();
 
         }
