@@ -54,13 +54,15 @@ public class TeleOp2023 extends LinearOpMode {
         // Function Positions
         double clawOpen = .5;
         double clawClose = .3;
+        double collectionPosition = .3;
+        double scoringPositiop = .7;
 
         // Limits
         double topLimit = 1500;
         double bottomLimit = 200;
 
         // PID Values
-        double armP = .6;
+        double armP = .008;
         double armI = 0;
         double armD = 0;
 
@@ -97,53 +99,25 @@ public class TeleOp2023 extends LinearOpMode {
             // Other functions
 
             // Reset Odometry
+
             if (gamepad1.options) {
                 imu.resetYaw();
             }
 
             if (gamepad1.left_bumper) {
 
-                double reference = 700;
-
-                // if speed is positive and the encoder past top limit
-                if (PIDControl(reference, leftSlideMotor.getCurrentPosition(), armP, armI, armD) > 0 && leftSlideMotor.getCurrentPosition() > topLimit) {
-
-                    leftSlideMotor.setPower(0);
-                    rightSlideMotor.setPower(0);
-
-                    // if speed is negative and the encoder past bottom limit
-                } else if (PIDControl(reference, leftSlideMotor.getCurrentPosition(), armP, armI, armD) < 0 && leftSlideMotor.getCurrentPosition() < bottomLimit) {
-
-                    leftSlideMotor.setPower(0);
-                    rightSlideMotor.setPower(0);
-
-                } else {
-
-                    leftSlideMotor.setPower(PIDControl(reference, leftSlideMotor.getCurrentPosition(), armP, armI, armD));
-                    rightSlideMotor.setPower(PIDControl(reference, leftSlideMotor.getCurrentPosition(), armP, armI, armD));
-
-                }
+                leftSlideMotor.setPower(PIDControl(100, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+                rightSlideMotor.setPower(PIDControl(100, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
 
             } else if (gamepad1.right_bumper) {
 
-                double reference = 1200;
+                leftSlideMotor.setPower(PIDControl(1500, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+                rightSlideMotor.setPower(PIDControl(1500, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
 
-                if (PIDControl(reference, leftSlideMotor.getCurrentPosition(), armP, armI, armD) > 0 && leftSlideMotor.getCurrentPosition() > topLimit) {
+            } else {
 
-                    leftSlideMotor.setPower(0);
-                    rightSlideMotor.setPower(0);
-
-                } else if (PIDControl(reference, leftSlideMotor.getCurrentPosition(), armP, armI, armD) < 0 && leftSlideMotor.getCurrentPosition() < bottomLimit) {
-
-                    leftSlideMotor.setPower(0);
-                    rightSlideMotor.setPower(0);
-
-                } else {
-
-                    leftSlideMotor.setPower(PIDControl(reference, leftSlideMotor.getCurrentPosition(), armP, armI, armD));
-                    rightSlideMotor.setPower(PIDControl(reference, leftSlideMotor.getCurrentPosition(), armP, armI, armD));
-
-                }
+                leftSlideMotor.setPower(0);
+                rightSlideMotor.setPower(0);
 
             }
 
@@ -161,6 +135,14 @@ public class TeleOp2023 extends LinearOpMode {
                 claw.setPosition(clawClose);
             }
 
+            // Wrist position
+            if (gamepad1.dpad_up) {
+                wrist.setPosition(collectionPosition);
+            } else if (gamepad1.dpad_down) {
+                wrist.setPosition(scoringPositiop);
+            }
+
+            telemetry.addData("PID Reading", PIDControl(700, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .2);
             telemetry.addData("Left Bore Reading", frontLeftMotor.getCurrentPosition());
             telemetry.addData("Slide Reading", leftSlideMotor.getCurrentPosition());
             telemetry.addData("Claw Reading", claw.getPosition());
