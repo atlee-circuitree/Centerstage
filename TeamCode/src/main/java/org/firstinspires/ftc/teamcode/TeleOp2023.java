@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -15,6 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 public class TeleOp2023 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
+
         // Declare our motors--
         // Make sure your ID's match your configuration
         DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
@@ -24,27 +26,21 @@ public class TeleOp2023 extends LinearOpMode {
         DcMotor rightSlideMotor = hardwareMap.dcMotor.get("rightSlideMotor");
         DcMotor leftSlideMotor = hardwareMap.dcMotor.get("leftSlideMotor");
         CRServo intake = hardwareMap.crservo.get("intake");
-        //Servo intake = hardwareMap.servo.get("intake");
-        Servo claw = hardwareMap.servo.get("claw"); //claw
+        Servo claw = hardwareMap.servo.get("claw");
         Servo wrist = hardwareMap.servo.get("wrist");
 
         frontLeftMotor.getCurrentPosition();
 
-        // Reverse the right side motors. This may be wrong for your setup.
-        // If your robot moves backwards when commanded to go forwards,
-        // reverse the left side instead.
-        // See the note about this earlier on this page.
+        // Reverse the right side motors.
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-
         rightSlideMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
+
         // Adjust the orientation parameters to match your robot
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
@@ -63,10 +59,14 @@ public class TeleOp2023 extends LinearOpMode {
         double topLimit = 1500;
         double bottomLimit = 200;
 
+        // PID Values
+        double armP = .6;
+        double armI = 0;
+        double armD = 0;
+
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-
 
             double y = -gamepad1.left_stick_y * driveSpeed; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x * driveSpeed;
@@ -101,16 +101,16 @@ public class TeleOp2023 extends LinearOpMode {
                 imu.resetYaw();
             }
 
-            // Moves the arm up and down
-            if (gamepad1.left_bumper && leftSlideMotor.getCurrentPosition() < topLimit)  {
-                leftSlideMotor.setPower(armSpeed);
-                rightSlideMotor.setPower(armSpeed);
-            }  else if (gamepad1.right_bumper && leftSlideMotor.getCurrentPosition() > bottomLimit) {
-                leftSlideMotor.setPower(-armSpeed);
-                rightSlideMotor.setPower(-armSpeed);
-            } else {
-                leftSlideMotor.setPower(0);
-                rightSlideMotor.setPower(0);
+            if (gamepad1.left_bumper) {
+
+                leftSlideMotor.setPower(PIDControl(700, leftSlideMotor.getCurrentPosition(), armP, armI, armD));
+                rightSlideMotor.setPower(PIDControl(700, leftSlideMotor.getCurrentPosition(), armP, armI, armD));
+
+            } else if (gamepad1.right_bumper) {
+
+                leftSlideMotor.setPower(PIDControl(1200, leftSlideMotor.getCurrentPosition(), armP, armI, armD));
+                rightSlideMotor.setPower(PIDControl(1200, leftSlideMotor.getCurrentPosition(), armP, armI, armD));
+
             }
 
             // Intake speed
@@ -118,7 +118,6 @@ public class TeleOp2023 extends LinearOpMode {
                 intake.setPower(intakeSpeed);
             } else {
                 intake.setPower(0);
-                //Continuous Servo speed
             }
 
             // Claw position
@@ -134,6 +133,26 @@ public class TeleOp2023 extends LinearOpMode {
             telemetry.update();
 
         }
+
+    }
+
+    // Generic PID Variables
+    double integralSum = 0;
+    double lastError = 0;
+    ElapsedTime timer = new ElapsedTime();
+
+    // Generic PID control for our functions
+    public double PIDControl(double reference, double state, double kP, double kI, double kD) {
+
+        double error = reference - state;
+        integralSum += error * timer.seconds();
+        double derivative = (error - lastError) / timer.seconds();
+        lastError = error;
+
+        timer.reset();
+
+        double output = (error * kP) + (derivative * kD) + (integralSum * kI);
+        return output;
 
     }
 
