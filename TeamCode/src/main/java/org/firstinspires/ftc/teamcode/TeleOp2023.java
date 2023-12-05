@@ -49,13 +49,16 @@ public class TeleOp2023 extends LinearOpMode {
         // Function Speeds
         double driveSpeed = .5;
         double armSpeed = .25;
-        double intakeSpeed = .8;
+        double intakeSpeed = 1;
 
         // Function Positions
-        double clawOpen = .5;
+        double clawOpen = .4;
         double clawClose = .3;
-        double collectionPosition = .3;
-        double scoringPositiop = .7;
+        double scoringPosition = .1;
+        double collectionPosition = .9;
+        double testServoPosition = .5;
+        boolean increased = false;
+        boolean decreased = false;
 
         // Limits
         double topLimit = 1500;
@@ -122,26 +125,61 @@ public class TeleOp2023 extends LinearOpMode {
             }
 
             // Intake speed
-            if (gamepad1.a) {
+            if (gamepad2.a) {
                 intake.setPower(intakeSpeed);
             } else {
                 intake.setPower(0);
             }
 
+            /*
             // Claw position
-            if (gamepad1.y) {
-                claw.setPosition(clawOpen);
-            } else if (gamepad1.x) {
-                claw.setPosition(clawClose);
+            if (gamepad2.x) {
+                //claw.setPosition(clawOpen);
+                if (testServoPosition < 1 && increased == false) {
+                    testServoPosition = testServoPosition + .05;
+                    increased = true;
+                }
+            } else {
+                increased = false;
             }
+
+            if (gamepad2.y) {
+                claw.setPosition(clawClose);
+                if (testServoPosition > 0 && decreased == false) {
+                    testServoPosition = testServoPosition - .05;
+                    decreased = true;
+                }
+            } else {
+                decreased = false;
+            }
+            */
+
+            if (gamepad2.y) {
+
+                claw.setPosition(clawClose);
+
+            }
+
+            if (gamepad2.x) {
+
+                claw.setPosition(clawOpen);
+
+            }
+
+            if (gamepad2.b) {
+                claw.setPosition(testServoPosition);
+            }
+
+
 
             // Wrist position
-            if (gamepad1.dpad_up) {
-                wrist.setPosition(collectionPosition);
-            } else if (gamepad1.dpad_down) {
-                wrist.setPosition(scoringPositiop);
+            if (gamepad2.dpad_up) {
+                wrist.setPosition(collectionPosition); // .1
+            } else if (gamepad2.dpad_down) {
+                wrist.setPosition(scoringPosition); // .7
             }
 
+            telemetry.addData("Test Servo Position", testServoPosition);
             telemetry.addData("PID Reading", PIDControl(700, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .2);
             telemetry.addData("Left Bore Reading", frontLeftMotor.getCurrentPosition());
             telemetry.addData("Slide Reading", leftSlideMotor.getCurrentPosition());
