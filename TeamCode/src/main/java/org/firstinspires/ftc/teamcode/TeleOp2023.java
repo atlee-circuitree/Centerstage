@@ -40,29 +40,31 @@ public class TeleOp2023 extends LinearOpMode {
         IMU imu = hardwareMap.get(IMU.class, "imu");
 
         // Adjust the orientation parameters to match your robot
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.LEFT));
         // Without this, the REV Hub's orientation is assumed to be logo up / USB forward
         imu.initialize(parameters);
 
         waitForStart();
 
         // Function Speeds
-        double driveSpeed = .5;
+        double driveSpeed = .75;
         double armSpeed = .25;
         double intakeSpeed = 1;
 
         // Function Positions
-        double clawOpen = .4;
+        double clawOpen = .36;
         double clawClose = .3;
-        double scoringPosition = .1;
-        double collectionPosition = .9;
+        double collectionPosition = .3;
+        double downPosition = .2;
+        double upPosition = .9;
         double testServoPosition = .5;
         boolean increased = false;
         boolean decreased = false;
 
         // Limits
         double topLimit = 1500;
-        double bottomLimit = 200;
+        double bottomLimit = 20;
+        double collectionLimit = 200;
 
         // PID Values
         double armP = .008;
@@ -73,9 +75,9 @@ public class TeleOp2023 extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            double y = -gamepad1.left_stick_y * driveSpeed; // Remember, Y stick value is reversed
-            double x = gamepad1.left_stick_x * driveSpeed;
-            double rx = gamepad1.right_stick_x * driveSpeed;
+            double y = gamepad1.left_stick_y * driveSpeed; // Remember, Y stick value is reversed
+            double x = -gamepad1.left_stick_x * driveSpeed;
+            double rx = -gamepad1.right_stick_x * driveSpeed;
 
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
@@ -94,10 +96,10 @@ public class TeleOp2023 extends LinearOpMode {
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
 
-            //frontLeftMotor.setPower(frontLeftPower);
-            //backLeftMotor.setPower(backLeftPower);
-            //frontRightMotor.setPower(frontRightPower);
-            //rcbackRightMotor.setPower(backRightPower); // Drive
+            frontLeftMotor.setPower(frontLeftPower);
+            backLeftMotor.setPower(backLeftPower);
+            frontRightMotor.setPower(frontRightPower);
+            backRightMotor.setPower(backRightPower); // Drive
 
             // Other functions
 
@@ -107,15 +109,20 @@ public class TeleOp2023 extends LinearOpMode {
                 imu.resetYaw();
             }
 
-            if (gamepad1.left_bumper) {
+            if (gamepad2.right_stick_y > .5) {
 
-                leftSlideMotor.setPower(PIDControl(100, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
-                rightSlideMotor.setPower(PIDControl(100, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+                leftSlideMotor.setPower(PIDControl(bottomLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+                rightSlideMotor.setPower(PIDControl(bottomLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
 
-            } else if (gamepad1.right_bumper) {
+            } else if (gamepad2.right_stick_y < -.5) {
 
-                leftSlideMotor.setPower(PIDControl(1500, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
-                rightSlideMotor.setPower(PIDControl(1500, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+                leftSlideMotor.setPower(PIDControl(topLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+                rightSlideMotor.setPower(PIDControl(topLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+
+            } else if (gamepad2.b) {
+
+                leftSlideMotor.setPower(PIDControl(collectionLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+                rightSlideMotor.setPower(PIDControl(collectionLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
 
             } else {
 
@@ -131,29 +138,6 @@ public class TeleOp2023 extends LinearOpMode {
                 intake.setPower(0);
             }
 
-            /*
-            // Claw position
-            if (gamepad2.x) {
-                //claw.setPosition(clawOpen);
-                if (testServoPosition < 1 && increased == false) {
-                    testServoPosition = testServoPosition + .05;
-                    increased = true;
-                }
-            } else {
-                increased = false;
-            }
-
-            if (gamepad2.y) {
-                claw.setPosition(clawClose);
-                if (testServoPosition > 0 && decreased == false) {
-                    testServoPosition = testServoPosition - .05;
-                    decreased = true;
-                }
-            } else {
-                decreased = false;
-            }
-            */
-
             if (gamepad2.y) {
 
                 claw.setPosition(clawClose);
@@ -166,17 +150,19 @@ public class TeleOp2023 extends LinearOpMode {
 
             }
 
-            if (gamepad2.b) {
-                claw.setPosition(testServoPosition);
-            }
-
-
-
             // Wrist position
-            if (gamepad2.dpad_up) {
-                wrist.setPosition(collectionPosition); // .1
-            } else if (gamepad2.dpad_down) {
-                wrist.setPosition(scoringPosition); // .7
+            if (gamepad2.left_stick_y < -.5) {
+
+                wrist.setPosition(upPosition); //
+
+            } else if (gamepad2.left_stick_y > .5) {
+
+                wrist.setPosition(downPosition); // .7
+
+            } else {
+
+                wrist.setPosition(collectionPosition);
+
             }
 
             telemetry.addData("Test Servo Position", testServoPosition);
@@ -198,6 +184,8 @@ public class TeleOp2023 extends LinearOpMode {
     // Generic PID control for our functions
     public double PIDControl(double reference, double state, double kP, double kI, double kD) {
 
+        double speedLimit = .8;
+
         double error = reference - state;
         integralSum += error * timer.seconds();
         double derivative = (error - lastError) / timer.seconds();
@@ -206,6 +194,31 @@ public class TeleOp2023 extends LinearOpMode {
         timer.reset();
 
         double output = (error * kP) + (derivative * kD) + (integralSum * kI);
+
+        if (output > speedLimit) {
+
+            output = speedLimit;
+
+        }
+
+        if (output < -speedLimit) {
+
+            output = -speedLimit;
+
+        }
+
+        if (output > 0 && state > 2000) {
+
+            output = 0;
+
+        }
+
+        if (output < 0 && state < 20) {
+
+            output = 0;
+
+        }
+
         return output;
 
     }
