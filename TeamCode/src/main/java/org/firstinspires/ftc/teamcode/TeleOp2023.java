@@ -50,11 +50,12 @@ public class TeleOp2023 extends LinearOpMode {
         double driveSpeed = .75;
         double armSpeed = .25;
         double intakeSpeed = 1;
+        double reverseIntakeSpeed = -1;
 
         // Function Positions
         double clawOpen = .36;
         double clawClose = .3;
-        double collectionPosition = .3;
+        double collectionPosition = .28;
         double downPosition = .2;
         double upPosition = .9;
         double testServoPosition = .5;
@@ -80,6 +81,7 @@ public class TeleOp2023 extends LinearOpMode {
             double rx = -gamepad1.right_stick_x * driveSpeed;
 
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            //double botHeading = 0;
 
             // Rotate the movement direction counter to the bot's rotation
             double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
@@ -132,19 +134,21 @@ public class TeleOp2023 extends LinearOpMode {
             }
 
             // Intake speed
-            if (gamepad2.a) {
+            if (gamepad1.left_trigger > .2) {
                 intake.setPower(intakeSpeed);
+            } else if (gamepad1.right_trigger > .2) {
+                intake.setPower(reverseIntakeSpeed);
             } else {
                 intake.setPower(0);
             }
 
-            if (gamepad2.y) {
+            if (gamepad2.left_trigger > 0.3) {
 
                 claw.setPosition(clawClose);
 
             }
 
-            if (gamepad2.x) {
+            if (gamepad2.right_trigger > 0.3){
 
                 claw.setPosition(clawOpen);
 
