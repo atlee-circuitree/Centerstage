@@ -29,7 +29,10 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Math.abs;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -55,31 +58,25 @@ import com.qualcomm.robotcore.util.Range;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: Linear OpMode", group="Linear OpMode")
+@Autonomous (name="Auto 1", group="Linear OpMode")
 
-public class Auto2023_2 extends LinearOpMode {
+public class Auto2023 extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor leftDrive = null;
-    private DcMotor rightDrive = null;
+
+    DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
+    DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
+    DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
+    DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
+    DcMotor rightSlideMotor = hardwareMap.dcMotor.get("rightSlideMotor");
+    DcMotor leftSlideMotor = hardwareMap.dcMotor.get("leftSlideMotor");
+    CRServo intake = hardwareMap.crservo.get("intake");
+    Servo claw = hardwareMap.servo.get("claw");
+    Servo wrist = hardwareMap.servo.get("wrist");
 
     @Override
     public void runOpMode() {
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
-
-        DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
-        DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
-        DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
-        DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
-        DcMotor rightSlideMotor = hardwareMap.dcMotor.get("rightSlideMotor");
-        DcMotor leftSlideMotor = hardwareMap.dcMotor.get("leftSlideMotor");
-        CRServo intake = hardwareMap.crservo.get("intake");
-        Servo claw = hardwareMap.servo.get("claw");
-        Servo wrist = hardwareMap.servo.get("wrist");
-
-        frontLeftMotor.getCurrentPosition();
 
         // Reverse the right side motors.
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -101,42 +98,61 @@ public class Auto2023_2 extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-
-            // Show the elapsed game time and wheel power.
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Front Left Encoder", frontLeftMotor.getCurrentPosition());
-            telemetry.addData("Front Right Encoder", frontRightMotor.getCurrentPosition());
-            telemetry.addData("Back Left Encoder", backLeftMotor.getCurrentPosition());
-            telemetry.addData("Back Right Encoder", backRightMotor.getCurrentPosition());
-            telemetry.update();
+            driveUsingEncoders(2000, .3);
 
         }
 
     }
 
-    public void driveStraight(double targetValue, double speed,
-                              DcMotor frontLeft, DcMotor frontRight,
-                              DcMotor backLeft, DcMotor backRight) {
+    // Basic driving function
+    public void drive(double speed) {
 
-        double encoderReading = frontLeft.getCurrentPosition();
-        boolean setInitialReading;
-        double initialReading;
+        frontLeftMotor.setPower(speed);
+        frontRightMotor.setPower(speed);
+        backLeftMotor.setPower(speed);
+        backRightMotor.setPower(speed);
 
-        if (setInitialReading =! true) {
+    }
 
-            initialReading = encoderReading;
-            setInitialReading = true;
+    // Basic turning function
+    public void turn(double speed) {
+
+        frontLeftMotor.setPower(speed);
+        frontRightMotor.setPower(speed);
+        backLeftMotor.setPower(-speed);
+        backRightMotor.setPower(-speed);
+
+    }
+
+    // Basic strafing function
+    public void strafe(double speed) {
+
+        frontLeftMotor.setPower(speed);
+        frontRightMotor.setPower(-speed);
+        backLeftMotor.setPower(-speed);
+        backRightMotor.setPower(speed);
+
+    }
+
+    public void driveUsingEncoders(double targetValue, double speed) {
+
+        // Get the inital encoder reading
+        double initalReading = frontLeftMotor.getCurrentPosition();
+
+        // Run while within range
+        while ( abs(frontLeftMotor.getCurrentPosition()) < targetValue + abs(initalReading)  && //and
+                abs(frontLeftMotor.getCurrentPosition()) > targetValue - abs(initalReading) ) {
+
+            drive(speed);
+
+            telemetry.addData("Running to : ", targetValue + abs(initalReading));
+            telemetry.addData("Currectly at : ", abs(frontLeftMotor.getCurrentPosition()));
+            telemetry.update();
 
         }
 
-        while ( encoderReading < targetValue) {
-
-            frontLeft.setPower(speed);
-            frontRight.setPower(speed);
-            backLeft.setPower(speed);
-            backRight.setPower(speed);
-
-        }
+        // Kill the motors
+        drive(0);
 
     }
 
