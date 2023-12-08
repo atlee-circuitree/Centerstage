@@ -33,16 +33,13 @@ import static java.lang.Math.abs;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 
 /*
@@ -65,18 +62,57 @@ public class Auto2023 extends LinearOpMode {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
 
-    DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
-    DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
-    DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
-    DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
-    DcMotor rightSlideMotor = hardwareMap.dcMotor.get("rightSlideMotor");
-    DcMotor leftSlideMotor = hardwareMap.dcMotor.get("leftSlideMotor");
-    CRServo intake = hardwareMap.crservo.get("intake");
-    Servo claw = hardwareMap.servo.get("claw");
-    Servo wrist = hardwareMap.servo.get("wrist");
+    DcMotor frontLeftMotor;
+    DcMotor backLeftMotor;
+    DcMotor frontRightMotor;
+    DcMotor backRightMotor;
+    DcMotor rightSlideMotor;
+    DcMotor leftSlideMotor;
+    CRServo intake;
+    Servo claw;
+    Servo wrist;
+
+    // Function Speeds
+    double driveSpeed = .75;
+    double armSpeed = .25;
+    double intakeSpeed = 1;
+    double reverseIntakeSpeed = -1;
+
+    // Function Positions
+    double clawOpen = .36;
+    double clawClose = .3;
+    double collectionPosition = .28;
+    double downPosition = .2;
+    double upPosition = .9;
+    double testServoPosition = .5;
+    boolean increased = false;
+    boolean decreased = false;
+
+    // Limits
+    double topLimit = 1500;
+    double bottomLimit = 20;
+    double collectionLimit = 200;
+
+    // PID Values
+    double armP = .008;
+    double armI = 0;
+    double armD = 0;
+    double integralSum = 0;
+    double lastError = 0;
+    ElapsedTime timer = new ElapsedTime();
 
     @Override
     public void runOpMode() {
+
+        frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
+        frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
+        backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
+        backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
+        rightSlideMotor = hardwareMap.dcMotor.get("rightSlideMotor");
+        leftSlideMotor = hardwareMap.dcMotor.get("leftSlideMotor");
+        intake = hardwareMap.crservo.get("intake");
+        claw = hardwareMap.servo.get("claw");
+        wrist = hardwareMap.servo.get("wrist");
 
         // Reverse the right side motors.
         frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -98,7 +134,14 @@ public class Auto2023 extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-            driveUsingEncoders(2000, .3);
+            // Auto Starts
+            controlClaw(clawClose, 1.5);
+            controlArm(200, 1.5);
+            controlWrist(downPosition, 1.5);
+            controlArm(1500, 2);
+            driveForwardUsingEncoders(12, 0.3);
+            // Auto Ends
+            break;
 
         }
 
@@ -134,25 +177,187 @@ public class Auto2023 extends LinearOpMode {
 
     }
 
-    public void driveUsingEncoders(double targetValue, double speed) {
+    public void driveForwardUsingEncoders(double inches, double speed) {
 
         // Get the inital encoder reading
-        double initalReading = frontLeftMotor.getCurrentPosition();
 
-        // Run while within range
-        while ( abs(frontLeftMotor.getCurrentPosition()) < targetValue + abs(initalReading)  && //and
-                abs(frontLeftMotor.getCurrentPosition()) > targetValue - abs(initalReading) ) {
+        double initalReading = -backRightMotor.getCurrentPosition();
+        double target = inches * 133.33333;
 
-            drive(speed);
+        // Run while within rangepublic void driveUsingEncoders(double inches, double speed) {
+        //
+        //        // Get the inital encoder reading
+        //        double initalReading = backRightMotor.getCurrentPosition();
+        //        double target = inches * 133.33333;
+        //        double
+        while (-backRightMotor.getCurrentPosition() < target + initalReading) { //and
 
-            telemetry.addData("Running to : ", targetValue + abs(initalReading));
-            telemetry.addData("Currectly at : ", abs(frontLeftMotor.getCurrentPosition()));
+            drive(-speed);
+
+            telemetry.addData("Running to : ", inches + initalReading);
+            telemetry.addData("Currectly at : ", backRightMotor.getCurrentPosition());
             telemetry.update();
 
         }
 
         // Kill the motors
         drive(0);
+
+    }
+
+    public void driveBackwardsUsingEncoders(double inches, double speed) {
+
+        // Get the inital encoder reading
+
+        double initalReading = -backRightMotor.getCurrentPosition();
+        double target = inches * 133.33333;
+
+        // Run while within rangepublic void driveUsingEncoders(double inches, double speed) {
+        //
+        //        // Get the inital encoder reading
+        //        double initalReading = backRightMotor.getCurrentPosition();
+        //        double target = inches * 133.33333;
+        //        double
+        while (-backRightMotor.getCurrentPosition() > target - initalReading) { //and
+
+            drive(speed);
+
+            telemetry.addData("Running to : ", inches + initalReading);
+            telemetry.addData("Currectly at : ", backRightMotor.getCurrentPosition());
+            telemetry.update();
+
+        }
+
+        // Kill the motors
+        drive(0);
+
+    }
+
+
+    public void strafeRightUsingEncoders(double inches, double speed) {
+
+        // Get the inital encoder reading
+        double initalReading = -frontRightMotor.getCurrentPosition();
+        double target = inches * 133.33333;
+
+        while (-frontRightMotor.getCurrentPosition() < target + initalReading) { //and
+
+            strafe(-speed);
+
+            telemetry.addData("Running to : ", inches + initalReading);
+            telemetry.addData("Currectly at : ", -frontRightMotor.getCurrentPosition());
+            telemetry.update();
+
+        }
+
+        // Kill the motors
+        drive(0);
+
+    }
+
+    public void strafeLeftUsingEncoders(double inches, double speed) {
+
+        // Get the inital encoder reading
+        double initalReading = -frontRightMotor.getCurrentPosition();
+        double target = inches * 133.33333;
+
+        while (-frontRightMotor.getCurrentPosition() > target - initalReading) { //and
+
+            strafe(speed);
+
+            telemetry.addData("Running to : ", inches + initalReading);
+            telemetry.addData("Currectly at : ", -frontRightMotor.getCurrentPosition());
+            telemetry.update();
+
+        }
+
+        // Kill the motors
+        drive(0);
+
+    }
+
+    public void controlClaw(double clawPosition, double timeout) {
+
+        double initalTime = runtime.time();
+        double time = timeout;
+
+        while (runtime.time() < initalTime + timeout) {
+
+            claw.setPosition(clawPosition);
+
+        }
+
+    }
+
+    public void controlWrist(double wristPosition, double timeout) {
+
+        double initalTime = runtime.time();
+        double time = timeout;
+
+        while (runtime.time() < initalTime + timeout) {
+
+            wrist.setPosition(wristPosition);
+
+        }
+
+    }
+
+    public void controlArm(double armPosition, double timeout) {
+
+        double initalTime = runtime.time();
+        double time = timeout;
+
+        while (runtime.time() < initalTime + timeout) {
+
+            leftSlideMotor.setPower(PIDControl(armPosition, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+            rightSlideMotor.setPower(PIDControl(armPosition, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+
+        }
+
+        leftSlideMotor.setPower(0);
+        rightSlideMotor.setPower(0);
+
+    }
+
+    // Generic PID control for our functions
+    public double PIDControl(double reference, double state, double kP, double kI, double kD) {
+
+        double speedLimit = .8;
+
+        double error = reference - state;
+        integralSum += error * timer.seconds();
+        double derivative = (error - lastError) / timer.seconds();
+        lastError = error;
+
+        timer.reset();
+
+        double output = (error * kP) + (derivative * kD) + (integralSum * kI);
+
+        if (output > speedLimit) {
+
+            output = speedLimit;
+
+        }
+
+        if (output < -speedLimit) {
+
+            output = -speedLimit;
+
+        }
+
+        if (output > 0 && state > 2000) {
+
+            output = 0;
+
+        }
+
+        if (output < 0 && state < 20) {
+
+            output = 0;
+
+        }
+
+        return output;
 
     }
 
