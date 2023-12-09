@@ -135,11 +135,6 @@ public class Auto2023 extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Auto Starts
-            controlClaw(clawClose, 1.5);
-            controlArm(200, 1.5);
-            controlWrist(downPosition, 1.5);
-            controlArm(1500, 2);
-            driveForwardUsingEncoders(12, 0.3);
             // Auto Ends
             break;
 
@@ -177,20 +172,14 @@ public class Auto2023 extends LinearOpMode {
 
     }
 
-    public void driveForwardUsingEncoders(double inches, double speed) {
+    public void driveForwardUsingEncoders(double inches, double speed, double timeout) {
 
         // Get the inital encoder reading
-
+        double initalTime = runtime.time();
         double initalReading = -backRightMotor.getCurrentPosition();
-        double target = inches * 133.33333;
+        double target = inches * 336.8786366;
 
-        // Run while within rangepublic void driveUsingEncoders(double inches, double speed) {
-        //
-        //        // Get the inital encoder reading
-        //        double initalReading = backRightMotor.getCurrentPosition();
-        //        double target = inches * 133.33333;
-        //        double
-        while (-backRightMotor.getCurrentPosition() < target + initalReading) { //and
+        while (-backRightMotor.getCurrentPosition() < target + initalReading && runtime.time() < initalTime + timeout) { //and
 
             drive(-speed);
 
@@ -205,20 +194,14 @@ public class Auto2023 extends LinearOpMode {
 
     }
 
-    public void driveBackwardsUsingEncoders(double inches, double speed) {
+    public void driveBackwardsUsingEncoders(double inches, double speed, double timeout) {
 
         // Get the inital encoder reading
-
+        double initalTime = runtime.time();
         double initalReading = -backRightMotor.getCurrentPosition();
-        double target = inches * 133.33333;
+        double target = inches * 336.8786366;
 
-        // Run while within rangepublic void driveUsingEncoders(double inches, double speed) {
-        //
-        //        // Get the inital encoder reading
-        //        double initalReading = backRightMotor.getCurrentPosition();
-        //        double target = inches * 133.33333;
-        //        double
-        while (-backRightMotor.getCurrentPosition() > target - initalReading) { //and
+        while (-backRightMotor.getCurrentPosition() > target - initalReading && runtime.time() < initalTime + timeout) { //and
 
             drive(speed);
 
@@ -234,13 +217,14 @@ public class Auto2023 extends LinearOpMode {
     }
 
 
-    public void strafeRightUsingEncoders(double inches, double speed) {
+    public void strafeRightUsingEncoders(double inches, double speed, double timeout) {
 
         // Get the inital encoder reading
+        double initalTime = runtime.time();
         double initalReading = -frontRightMotor.getCurrentPosition();
-        double target = inches * 133.33333;
+        double target = inches * 336.8786366;
 
-        while (-frontRightMotor.getCurrentPosition() < target + initalReading) { //and
+        while (-frontRightMotor.getCurrentPosition() < target + initalReading && runtime.time() < initalTime + timeout) { //and
 
             strafe(-speed);
 
@@ -255,13 +239,14 @@ public class Auto2023 extends LinearOpMode {
 
     }
 
-    public void strafeLeftUsingEncoders(double inches, double speed) {
+    public void strafeLeftUsingEncoders(double inches, double speed, double timeout) {
 
         // Get the inital encoder reading
+        double initalTime = runtime.time();
         double initalReading = -frontRightMotor.getCurrentPosition();
-        double target = inches * 133.33333;
+        double target = inches * 336.8786366;
 
-        while (-frontRightMotor.getCurrentPosition() > target - initalReading) { //and
+        while (-frontRightMotor.getCurrentPosition() > target - initalReading && runtime.time() < initalTime + timeout) { //and
 
             strafe(speed);
 
