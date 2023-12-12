@@ -59,8 +59,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Auto2023 extends LinearOpMode {
 
-    //comment
-
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
 
