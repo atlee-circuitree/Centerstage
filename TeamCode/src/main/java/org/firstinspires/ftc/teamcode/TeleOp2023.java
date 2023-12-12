@@ -66,6 +66,8 @@ public class TeleOp2023 extends LinearOpMode {
         double topLimit = 1500;
         double bottomLimit = 20;
         double collectionLimit = 200;
+        double clawState = 2;
+        boolean clawStateChanged = false;
 
         // PID Values
         double armP = .008;
@@ -142,13 +144,33 @@ public class TeleOp2023 extends LinearOpMode {
                 intake.setPower(0);
             }
 
-            if (gamepad2.left_trigger > 0.3) {
+            if (gamepad2.right_trigger > 0.3) {
 
-                claw.setPosition(clawClose);
+                // 0 close, 1 open
+                if (clawState == 0 && clawStateChanged == false) {
+
+                    clawState = 1;
+                    clawStateChanged = true;
+
+                } else if (clawState = 1 && clawStateChanged == false) {
+
+                    clawState = 0;
+                    clawStateChanged = true;
+
+                }
+
+            } else {
+
+                clawStateChanged = true;
 
             }
 
-            if (gamepad2.right_trigger > 0.3){
+
+            if (clawState == 0) {
+
+                claw.setPosition(clawClose);
+
+            } else if (clawState == 1) {
 
                 claw.setPosition(clawOpen);
 
@@ -168,6 +190,8 @@ public class TeleOp2023 extends LinearOpMode {
                 wrist.setPosition(collectionPosition);
 
             }
+
+        } if (gamepad1.dpad_up);
 
             telemetry.addData("Test Servo Position", testServoPosition);
             telemetry.addData("PID Reading", PIDControl(700, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .2);
