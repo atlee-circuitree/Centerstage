@@ -66,7 +66,7 @@ public class TeleOp2023 extends LinearOpMode {
         double topLimit = 1500;
         double bottomLimit = 20;
         double collectionLimit = 200;
-        double clawState = 2;
+        double clawState = 0;
         boolean clawStateChanged = false;
 
         // PID Values
