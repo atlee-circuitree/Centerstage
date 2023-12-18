@@ -35,8 +35,11 @@ public class TeleOp2023 extends LinearOpMode {
     double topLimit = 2800;
     double bottomLimit = 20;
     double collectionLimit = 200;
+
+    //States
     double clawState = 0;
     boolean clawStateChanged = false;
+    double autoPickupState = 0;
 
     // PID Values
     double armP = .008;
@@ -192,6 +195,45 @@ public class TeleOp2023 extends LinearOpMode {
             } else {
 
                 wrist.setPosition(collectionPosition);
+
+            }
+
+            if (gamepad2.x) {
+
+                autoPickupState = 0;
+                leftSlideMotor.setPower(0);
+                rightSlideMotor.setPower(0);
+
+            }
+
+            if (gamepad2.a && autoPickupState == 0) {
+
+                autoPickupState = 1;
+
+            }
+
+            if (autoPickupState == 1) {
+
+                if (leftSlideMotor.getCurrentPosition() < 190) {
+
+                    leftSlideMotor.setPower(PIDControl(collectionLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+                    rightSlideMotor.setPower(PIDControl(collectionLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+
+                } else {
+
+                    leftSlideMotor.setPower(0);
+                    rightSlideMotor.setPower(0);
+                    autoPickupState = 2;
+
+                }
+
+            }
+
+            if (autoPickupState == 2) {
+
+                leftSlideMotor.setPower(0);
+                rightSlideMotor.setPower(0);
+                wrist.setPosition(downPosition);
 
             }
 
