@@ -135,6 +135,7 @@ public class Auto2023 extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Auto Starts
+            driveForwardUsingEncoders(24,.5,.3);
             // Auto Ends
             break;
 

@@ -14,6 +14,35 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp
 public class TeleOp2023 extends LinearOpMode {
+
+    // Function Speeds
+    double driveSpeed = .75;
+    double armSpeed = .25;
+    double intakeSpeed = 1;
+    double reverseIntakeSpeed = -1;
+
+    // Function Positions
+    double clawOpen = .36;
+    double clawClose = .3;
+    double collectionPosition = .28;
+    double downPosition = .2;
+    double upPosition = .9;
+    double testServoPosition = .5;
+    boolean increased = false;
+    boolean decreased = false;
+
+    // Limits
+    double topLimit = 2800;
+    double bottomLimit = 20;
+    double collectionLimit = 200;
+    double clawState = 0;
+    boolean clawStateChanged = false;
+
+    // PID Values
+    double armP = .008;
+    double armI = 0;
+    double armD = 0;
+
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -28,6 +57,9 @@ public class TeleOp2023 extends LinearOpMode {
         CRServo intake = hardwareMap.crservo.get("intake");
         Servo claw = hardwareMap.servo.get("claw");
         Servo wrist = hardwareMap.servo.get("wrist");
+
+        rightSlideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftSlideMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         frontLeftMotor.getCurrentPosition();
 
@@ -45,34 +77,6 @@ public class TeleOp2023 extends LinearOpMode {
         imu.initialize(parameters);
 
         waitForStart();
-
-        // Function Speeds
-        double driveSpeed = .75;
-        double armSpeed = .25;
-        double intakeSpeed = 1;
-        double reverseIntakeSpeed = -1;
-
-        // Function Positions
-        double clawOpen = .36;
-        double clawClose = .3;
-        double collectionPosition = .28;
-        double downPosition = .2;
-        double upPosition = .9;
-        double testServoPosition = .5;
-        boolean increased = false;
-        boolean decreased = false;
-
-        // Limits
-        double topLimit = 1500;
-        double bottomLimit = 20;
-        double collectionLimit = 200;
-        double clawState = 0;
-        boolean clawStateChanged = false;
-
-        // PID Values
-        double armP = .008;
-        double armI = 0;
-        double armD = 0;
 
         if (isStopRequested()) return;
 
@@ -115,13 +119,13 @@ public class TeleOp2023 extends LinearOpMode {
 
             if (gamepad2.right_stick_y > .5) {
 
-                leftSlideMotor.setPower(PIDControl(bottomLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
-                rightSlideMotor.setPower(PIDControl(bottomLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+                leftSlideMotor.setPower(PIDControl(bottomLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .7);
+                rightSlideMotor.setPower(PIDControl(bottomLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .7);
 
             } else if (gamepad2.right_stick_y < -.5) {
 
-                leftSlideMotor.setPower(PIDControl(topLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
-                rightSlideMotor.setPower(PIDControl(topLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .5);
+                leftSlideMotor.setPower(PIDControl(topLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .7);
+                rightSlideMotor.setPower(PIDControl(topLimit, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .7);
 
             } else if (gamepad2.b) {
 
@@ -144,7 +148,7 @@ public class TeleOp2023 extends LinearOpMode {
                 intake.setPower(0);
             }
 
-            if (gamepad2.right_trigger > 0.3) {
+            if (gamepad2.right_bumper) {
 
                 // 0 close, 1 open
                 if (clawState == 0 && clawStateChanged == false) {
@@ -152,7 +156,7 @@ public class TeleOp2023 extends LinearOpMode {
                     clawState = 1;
                     clawStateChanged = true;
 
-                } else if (clawState = 1 && clawStateChanged == false) {
+                } else if (clawState == 1 && clawStateChanged == false) {
 
                     clawState = 0;
                     clawStateChanged = true;
@@ -161,7 +165,7 @@ public class TeleOp2023 extends LinearOpMode {
 
             } else {
 
-                clawStateChanged = true;
+                clawStateChanged = false;
 
             }
 
@@ -191,18 +195,19 @@ public class TeleOp2023 extends LinearOpMode {
 
             }
 
-        } if (gamepad1.dpad_up);
-
             telemetry.addData("Test Servo Position", testServoPosition);
             telemetry.addData("PID Reading", PIDControl(700, leftSlideMotor.getCurrentPosition(), armP, armI, armD) * .2);
             telemetry.addData("Left Bore Reading", frontLeftMotor.getCurrentPosition());
             telemetry.addData("Slide Reading", leftSlideMotor.getCurrentPosition());
             telemetry.addData("Claw Reading", claw.getPosition());
+            telemetry.addData("Claw State", clawState);
+            telemetry.addData("Claw Pressed", clawStateChanged);
             telemetry.update();
 
         }
 
-    }
+        }
+
 
     // Generic PID Variables
     double integralSum = 0;
@@ -212,7 +217,7 @@ public class TeleOp2023 extends LinearOpMode {
     // Generic PID control for our functions
     public double PIDControl(double reference, double state, double kP, double kI, double kD) {
 
-        double speedLimit = .8;
+        double speedLimit = 1;
 
         double error = reference - state;
         integralSum += error * timer.seconds();
@@ -235,13 +240,13 @@ public class TeleOp2023 extends LinearOpMode {
 
         }
 
-        if (output > 0 && state > 2000) {
+        if (output > 0 && state > topLimit) {
 
             output = 0;
 
         }
 
-        if (output < 0 && state < 20) {
+        if (output < 0 && state < bottomLimit) {
 
             output = 0;
 
